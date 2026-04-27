@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metdata:
+  name: mongo-service
+  namespace: todo-app
+  # THIS NAME is what other pods use to connect to MongoDB
+  # Our ConfigMap has: mongodb://admin:password123@mongo-service:27017
+  # Kubernetes DNS resolves 'mongo-service' → MongoDB pod IP
+spec:
+  selector:
+    app: mongo 
+    # Route traffic to pods with label 'app: mongo'
+  ports:
+    - port: 27017
+      targetPort: 27017
+      # port: what other pods connect to (27017)
+      # targetPort: what the MongoDB container listens on (27017)
+  type: ClusterIP
+  # ClusterIP = internal only, not accessible from outside cluster
+  # MongoDB should NEVER be exposed externally — security!

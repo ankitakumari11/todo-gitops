@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metdata:
+  name: mongo-deployment
+  namespace: todo-app
+  labels: 
+    app: mongo
+spec:
+  replicas: 1
+  # Only 1 replica for MongoDB
+  # Multiple MongoDB replicas need MongoDB Replica Sets configuration
+  # which is complex — keep it simple for now
+  selector:
+    matchLabels:
+      app: mongo
+      # This deployment manages pods with label 'app: mongo'
+
+  template:
+    metadata:
+      labels:
+        app: mongo
+        # Every pod created by this deployment gets this label
+
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:6
+          # Official MongoDB image, version 6
+
+          ports:
+            - containerPort: 27017
+              # MongoDB default port
+
+          env:
+            # These pull values from our Secret
+
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret # Secret name
+                  key: mongo-username # Key inside the secret
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-password
+          volumeMounts:
+            - name: mongo-storage
+              mountPath: /data/db 
+              # MongoDB stores all data in /data/db inside container
+              # We mount our PVC here so data goes to persistent disk
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+              # 250m CPU = 0.25 of one CPU core. 256Mi = 256 megabytes RAM.
+            limits: 
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: mongo-storage
+          PersistentVolumeClaim:
+            claimName: mongo-pvc
+            # Connect the PVC we created to this pod

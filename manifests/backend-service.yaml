@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metdata:
+  name: backend-service
+  namespace: todo-app
+  # THIS NAME is used in frontend nginx.conf
+  # location /api { proxy_pass http://backend-service:5000; }
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 5000
+      targetPort: 5000
+  type: ClusterIP
+  # Internal only — backend API not directly exposed to internet
+  # All external traffic goes through Frontend → Nginx proxy → Backend
+  

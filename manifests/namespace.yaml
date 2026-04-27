@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: todo-app
+
+# What? A Namespace is like a virtual cluster inside your real cluster. All our resources (pods, services) will live inside todo-app namespace.
+
+# Why? Without namespaces, all apps share the same space. If you run multiple projects on the same cluster, names can clash. Namespaces isolate everything. Also easier to delete — kubectl delete namespace todo-app removes everything at once.

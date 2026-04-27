@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment 
+  namespace: todo-app 
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  # 2 replicas = high availability
+  # If one backend pod crashes, the other still serves traffic
+  # Also spreads load across both worker nodes
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          # This image tag gets updated by Jenkins pipeline automatically
+          # Jenkins runs: sed -i "s|image: .../todo-backend:.*|image: .../todo-backend:8|"
+          image: ankitakumari346/todo-backend:latest
+          ports:
+            - containerPort: 5000
+          env: 
+            # Pull MongoDB URI from ConfigMap
+            - name: MONGO_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-config
+                  key: MONGO_URI
+            - name: PORT 
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-config
+                  key: PORT
+            - name: NODE_ENV
+              value: "production"
+          # Liveness Probe: Is the container alive?
+          # If this fails 3 times, Kubernetes RESTARTS the pod
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 15
+          # Wait 15s after container starts before first check
+          # Node.js needs time to start up
+            periodSeconds: 10
+          # Check every 10 seconds
+            featureThreshold: 3
+          # Restart after 3 consecutive failures
+        # Readiness Probe: Is the container ready to serve traffic?
+        # If this fails, pod is removed from Service (no traffic sent to it)
+        # But pod is NOT restarted — just temporarily excluded  
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+            
+# Liveness vs Readiness probe — what's the difference?
+# Liveness = "is the app alive?" — failed → K8s restarts the pod
+# Readiness = "is the app ready for traffic?" — failed → K8s stops sending traffic but doesn't restart
+# Example: backend starts up but MongoDB isn't ready yet. Readiness fails (no traffic) but Liveness passes (app is running). Once MongoDB connects, readiness passes and traffic flows. Without probes, K8s sends traffic to a pod that's still starting up → users see errors.
+
+
+# how they both are different becoz both are calling /health but how 2nd is showing that the pod is ready to receive traffic
+# 🔹 Example scenario
+# Case 1: App temporarily busy : DB slow / app overloaded
+# 👉 /health returns failure
+# What happens:
+# Readiness fails → stop traffic 🚫
+# Liveness still OK → no restart ✔
+# Case 2: App crashed : Server not responding
+# 👉 /health fails continuously
+# What happens:
+# Readiness fails → no traffic 🚫
+# Liveness fails → restart pod 🔁
+# 🔥 Best practice (important) -👉 In real systems: Use DIFFERENT endpoints
