@@ -8,6 +8,8 @@ spec:
     - ReadWriteOnce
       # ReadWriteOnce = only ONE node can mount this at a time
       # Correct for a single MongoDB instance
+  storageClassName: local-path
+  # Explicitly tell K8s which StorageClass to use
   resources:
     requests:
       storage: 1Gi
