@@ -1,13 +1,13 @@
 apiVersion: apps/v1
 kind: Deployment
-metdata:
-  name: frontend-deployment 
+metadata:
+  name: frontend-deployment
   namespace: todo-app
   labels:
     app: frontend
 spec:
   replicas: 2
-  selector: 
+  selector:
     matchLabels:
       app: frontend
   template:
