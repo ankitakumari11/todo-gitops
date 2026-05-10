@@ -22,7 +22,7 @@ spec:
         - name: backend
           # This image tag gets updated by Jenkins pipeline automatically
           # Jenkins runs: sed -i "s|image: .../todo-backend:.*|image: .../todo-backend:8|"
-          image: ankitakumari346/todo-backend:latest
+          image: ankitakumari346/todo-backend:9
           ports:
             - containerPort: 5000
           env: 

@@ -18,7 +18,7 @@ spec:
       containers:
         - name: frontend
           # This image tag gets updated by Jenkins pipeline automatically
-          image: ankitakumari346/todo-frontend:latest
+          image: ankitakumari346/todo-frontend:9
           ports:
             - containerPort: 80
           livenessProbe:
